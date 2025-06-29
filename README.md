@@ -70,6 +70,15 @@
   let daftarLagu = [];
   let indexAktif = null;
 
+  // Nama band default yang sudah punya data tersimpan
+  const bandSimpan = "eleventakustik";
+
+  // Data lagu default untuk eleventakustik (contoh bisa kamu isi)
+  const dataEleventakustik = [
+    { judul: "Cinta Ini Membunuhku", link: "https://chordtela.com/cinta-ini-membunuhku-eleventakustik" },
+    { judul: "Menghapus Jejakmu", link: "https://chordtela.com/menghapus-jejakmu-eleventakustik" }
+  ];
+
   // Simpan data ke localStorage berdasarkan nama band
   function simpanData() {
     if (!namaBandAktif) return;
@@ -80,18 +89,30 @@
   function loadData() {
     if (!namaBandAktif) return;
     const data = localStorage.getItem('dataLagu_' + namaBandAktif);
-    daftarLagu = data ? JSON.parse(data) : [];
+    if (data) {
+      daftarLagu = JSON.parse(data);
+    } else {
+      // Jika band eleventakustik dan belum ada data di localStorage, isi data default
+      if (namaBandAktif.toLowerCase() === bandSimpan.toLowerCase()) {
+        daftarLagu = dataEleventakustik.slice(); // clone array default
+        simpanData();
+      } else {
+        daftarLagu = [];
+      }
+    }
   }
 
   // Submit nama band, load data, tampilkan halaman utama
   function submitNamaBand() {
-    const band = document.getElementById('inputNamaBand').value.trim();
-    if (!band) return alert("Nama band tidak boleh kosong!");
-    namaBandAktif = band.toLowerCase();
+    const bandInput = document.getElementById('inputNamaBand').value.trim();
+    if (!bandInput) return alert("Nama band tidak boleh kosong!");
+    namaBandAktif = bandInput.toLowerCase();
+
     localStorage.setItem('namaBandAktif', namaBandAktif);
     document.getElementById('formBand').style.display = 'none';
     document.getElementById('mainApp').style.display = 'block';
-    document.getElementById('namaBandTampil').textContent = namaBandAktif;
+    document.getElementById('namaBandTampil').textContent = bandInput;
+
     loadData();
     renderDaftarJudul();
   }
@@ -220,7 +241,8 @@
       namaBandAktif = band;
       document.getElementById('formBand').style.display = 'none';
       document.getElementById('mainApp').style.display = 'block';
-      document.getElementById('namaBandTampil').textContent = namaBandAktif;
+      // Tampilkan nama band persis seperti input terakhir user (optional)
+      document.getElementById('namaBandTampil').textContent = band;
       loadData();
       renderDaftarJudul();
     }

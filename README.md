@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Album & Lagu Berdasarkan Band</title>
   <style>
-    /* CSS bawaan dari kode kamu sebelumnya tetap sama */
     body { font-family: Arial, sans-serif; margin: 20px; background: #f0f0f0; }
     h1 { color: #333; }
     input, textarea, button { font-size: 1rem; }
@@ -61,6 +60,12 @@
     <button class="action-btn" onclick="buatAlbum()">Buat Album</button>
   </div>
 
+  <!-- 🔍 Pencarian Lagu -->
+  <div style="margin: 20px 0;">
+    <input type="text" id="cariLaguInput" placeholder="Cari judul lagu..." oninput="cariLagu()" style="width: 100%; padding: 8px;" />
+    <div id="hasilPencarian" style="margin-top: 10px;"></div>
+  </div>
+
   <div id="albumContainer"></div>
 
   <div id="formLagu">
@@ -93,6 +98,7 @@
   let dataAlbum = [];
   let indexAlbumAktif = null;
   let namaBandAktif = null;
+  let indexLaguEdit = null;
 
   function simpanKeLocalStorage() {
     if (!namaBandAktif) return;
@@ -108,7 +114,7 @@
   function submitNamaBand() {
     let band = document.getElementById('inputNamaBand').value.trim();
     if (!band) return alert("Nama band tidak boleh kosong!");
-    band = band.toLowerCase(); // konsisten lowercase
+    band = band.toLowerCase();
     namaBandAktif = band;
     localStorage.setItem("namaBandAktif", namaBandAktif);
     document.getElementById('formBand').style.display = 'none';
@@ -119,7 +125,7 @@
   }
 
   function gantiBand() {
-    if(confirm("Ganti band? Semua data band saat ini akan disimpan. Kamu akan kembali ke halaman input nama band.")) {
+    if(confirm("Ganti band? Semua data band saat ini akan disimpan.")) {
       namaBandAktif = null;
       dataAlbum = [];
       localStorage.removeItem("namaBandAktif");
@@ -268,6 +274,53 @@
       event.target.value = '';
     };
     reader.readAsText(file);
+  }
+
+  function cariLagu() {
+    const keyword = document.getElementById('cariLaguInput').value.toLowerCase().trim();
+    const hasil = document.getElementById('hasilPencarian');
+    hasil.innerHTML = '';
+    if (keyword.length === 0) return;
+
+    let ditemukan = [];
+
+    dataAlbum.forEach((album, indexAlbum) => {
+      album.lagu.forEach((lagu, indexLagu) => {
+        if (lagu.judul.toLowerCase().includes(keyword)) {
+          ditemukan.push({
+            judul: lagu.judul,
+            indexAlbum,
+            indexLagu,
+            album: album.nama
+          });
+        }
+      });
+    });
+
+    if (ditemukan.length === 0) {
+      hasil.innerHTML = '<p><em>Tidak ada lagu ditemukan.</em></p>';
+    } else {
+      const list = document.createElement('ul');
+      list.style.paddingLeft = '20px';
+      ditemukan.forEach(item => {
+        const li = document.createElement('li');
+        li.innerHTML = `<a href="javascript:void(0)" onclick="scrollKeLagu(${item.indexAlbum}, ${item.indexLagu})">${escapeHtml(item.judul)} <small style="color:#777;">(${escapeHtml(item.album)})</small></a>`;
+        list.appendChild(li);
+      });
+      hasil.appendChild(list);
+    }
+  }
+
+  function scrollKeLagu(indexAlbum, indexLagu) {
+    const albumDivs = document.querySelectorAll('#albumContainer .album');
+    const targetAlbum = albumDivs[indexAlbum];
+    const laguDivs = targetAlbum.querySelectorAll('.lagu');
+    const targetLagu = laguDivs[indexLagu];
+    if (targetLagu) {
+      targetLagu.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      targetLagu.style.backgroundColor = '#ffffcc';
+      setTimeout(() => { targetLagu.style.backgroundColor = ''; }, 1000);
+    }
   }
 
   window.onload = function() {
